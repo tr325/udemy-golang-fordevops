@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -42,14 +43,36 @@ func (o Occurrences) GetResponse() string {
 }
 
 func main() {
-	args := os.Args
+	var (
+		requestUrl string
+		password   string
+		parsedUrl  *url.URL
+		err        error
+	)
 
-	if len(args) < 2 {
-		fmt.Println("Usage: ./http-get <url>")
+	flag.StringVar(&requestUrl, "url", "", "URL to access")
+	flag.StringVar(&password, "password", "", "use a password to access this API")
+	flag.Parse()
+
+	if parsedUrl, err = url.ParseRequestURI(requestUrl); err != nil {
+		fmt.Printf("URL is invalid: %s\n", err)
+		flag.Usage()
 		os.Exit(1)
 	}
 
-	res, err := doRequest(args[1])
+	if password != "" {
+		token, err := doLoginRequest(parsedUrl.Scheme+"://"+parsedUrl.Host+"/login", password)
+		if err != nil {
+			if requestErr, ok := err.(RequestError); ok {
+				fmt.Printf("Error: %s (HTTPCode: %d, Body: %s)\n", requestErr.Err, requestErr.HTTPCode, requestErr.Body)
+				os.Exit(1)
+			}
+			fmt.Printf("Error: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	res, err := doRequest(parsedUrl.String())
 	if err != nil {
 		if requestErr, ok := err.(RequestError); ok {
 			fmt.Printf("Error: %s (HTTPCode: %d, Body: %s)\n", requestErr.Err, requestErr.HTTPCode, requestErr.Body)
@@ -68,9 +91,6 @@ func main() {
 }
 
 func doRequest(requestUrl string) (Response, error) {
-	if _, err := url.ParseRequestURI(requestUrl); err != nil {
-		return nil, fmt.Errorf("URL is invalid: %s", err)
-	}
 
 	response, err := http.Get(requestUrl)
 	if err != nil {
