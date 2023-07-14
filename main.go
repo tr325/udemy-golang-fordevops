@@ -1,13 +1,23 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
+
+// Using capitals for the type and fields ensures they are exported, and are available to other packages.
+// lower case is not exported.
+type Words struct {
+	Page  string   `json:"page"`
+	Input string   `json:"input"`
+	Words []string `json:"words"`
+}
 
 func main() {
 	args := os.Args
@@ -33,6 +43,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if response.StatusCode != 200 {
+		fmt.Printf("Invalid output\nStatus: %d\nBody: %s\n", response.StatusCode, body)
+		os.Exit(1)
+	}
 
-	fmt.Printf("Status: %d\nBody: %s\n", response.StatusCode, body)
+	var words Words
+	err = json.Unmarshal(body, &words)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("JSON Parsed:\nPage: %s\nWords: %s\n", words.Page, strings.Join(words.Words, ", "))
 }
