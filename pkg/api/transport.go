@@ -4,14 +4,14 @@ import (
 	"net/http"
 )
 
-type JWTTransport struct {
+type jwtTransport struct {
 	transport http.RoundTripper
 	token     string
 	password  string
 	loginURL  string
 }
 
-func (t *JWTTransport) RoundTrip(request *http.Request) (*http.Response, error) {
+func (t *jwtTransport) RoundTrip(request *http.Request) (*http.Response, error) {
 	if t.token == "" {
 		if t.password != "" {
 			token, err := doLoginRequest(http.Client{}, t.loginURL, t.password)

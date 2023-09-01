@@ -8,15 +8,15 @@ import (
 	"net/http"
 )
 
-type LoginRequest struct {
+type loginRequest struct {
 	Password string `json:"password"`
 }
-type LoginResponse struct {
+type loginResponse struct {
 	Token string `json:"token"`
 }
 
 func doLoginRequest(client http.Client, loginUrl, password string) (string, error) {
-	loginRequest := LoginRequest{
+	loginRequest := loginRequest{
 		Password: password,
 	}
 
@@ -47,7 +47,7 @@ func doLoginRequest(client http.Client, loginUrl, password string) (string, erro
 			Err:      fmt.Sprintf("No valid JSON returned"),
 		}
 	}
-	var loginResponse LoginResponse
+	var loginResponse loginResponse
 	err = json.Unmarshal(responseBody, &loginResponse)
 	if err != nil {
 		return "", RequestError{

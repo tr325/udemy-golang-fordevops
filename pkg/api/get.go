@@ -7,30 +7,30 @@ import (
 	"strings"
 )
 
-type Response interface {
+type response interface {
 	GetResponse() string
 }
 
 // Using capitals for the type and fields ensures they are exported, and are available to other packages.
 // lower case is not exported.
-type Page struct {
+type page struct {
 	Name string `json:"page"`
 }
 
-type Words struct {
+type words struct {
 	Input string   `json:"input"`
 	Words []string `json:"words"`
 }
 
-func (w Words) GetResponse() string {
+func (w words) GetResponse() string {
 	return strings.Join(w.Words, ", ")
 }
 
-type Occurrences struct {
+type occurrences struct {
 	Words map[string]int `json:"words"`
 }
 
-func (o Occurrences) GetResponse() string {
+func (o occurrences) GetResponse() string {
 	var response []string
 	for word, count := range o.Words {
 		response = append(response, fmt.Sprintf("%s (%d)", word, count))
@@ -38,7 +38,7 @@ func (o Occurrences) GetResponse() string {
 	return strings.Join(response, ", ")
 }
 
-func (a API) DoGetRequest(requestUrl string) (Response, error) {
+func (a api) DoGetRequest(requestUrl string) (response, error) {
 
 	response, err := a.Client.Get(requestUrl)
 	if err != nil {
@@ -57,7 +57,7 @@ func (a API) DoGetRequest(requestUrl string) (Response, error) {
 
 	// Note: we are parsing the JSON _partially_ here, since we know that both endpoints include the
 	// `page` key, and then parsing the rest of the payload separately in the switch statement below
-	var page Page
+	var page page
 	err = json.Unmarshal(body, &page)
 	if err != nil {
 		return nil, RequestError{
@@ -69,7 +69,7 @@ func (a API) DoGetRequest(requestUrl string) (Response, error) {
 
 	switch page.Name {
 	case "words":
-		var words Words
+		var words words
 		err = json.Unmarshal(body, &words)
 		if err != nil {
 			return nil, RequestError{
@@ -80,7 +80,7 @@ func (a API) DoGetRequest(requestUrl string) (Response, error) {
 		}
 		return words, nil
 	case "occurrence":
-		var occurrences Occurrences
+		var occurrences occurrences
 		err = json.Unmarshal(body, &occurrences)
 		if err != nil {
 			return nil, RequestError{
