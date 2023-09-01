@@ -60,8 +60,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	client := http.Client{}
+
 	if password != "" {
-		token, err := doLoginRequest(parsedUrl.Scheme+"://"+parsedUrl.Host+"/login", password)
+		token, err := doLoginRequest(client, parsedUrl.Scheme+"://"+parsedUrl.Host+"/login", password)
 		if err != nil {
 			if requestErr, ok := err.(RequestError); ok {
 				fmt.Printf("Error: %s (HTTPCode: %d, Body: %s)\n", requestErr.Err, requestErr.HTTPCode, requestErr.Body)
@@ -70,9 +72,13 @@ func main() {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
+		client.Transport = JWTTransport{
+			transport: http.DefaultTransport,
+			token:     token,
+		}
 	}
 
-	res, err := doRequest(parsedUrl.String())
+	res, err := doRequest(client, parsedUrl.String())
 	if err != nil {
 		if requestErr, ok := err.(RequestError); ok {
 			fmt.Printf("Error: %s (HTTPCode: %d, Body: %s)\n", requestErr.Err, requestErr.HTTPCode, requestErr.Body)
@@ -90,9 +96,9 @@ func main() {
 	fmt.Printf("Response:\n%s\n", res.GetResponse())
 }
 
-func doRequest(requestUrl string) (Response, error) {
+func doRequest(client http.Client, requestUrl string) (Response, error) {
 
-	response, err := http.Get(requestUrl)
+	response, err := client.Get(requestUrl)
 	if err != nil {
 		return nil, fmt.Errorf("http.Get error: %s", err)
 	}

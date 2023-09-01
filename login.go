@@ -15,7 +15,7 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
-func doLoginRequest(loginUrl, password string) (string, error) {
+func doLoginRequest(client http.Client, loginUrl, password string) (string, error) {
 	loginRequest := LoginRequest{
 		Password: password,
 	}
@@ -25,7 +25,7 @@ func doLoginRequest(loginUrl, password string) (string, error) {
 		return "", fmt.Errorf("marshall error: %s", err)
 	}
 
-	response, err := http.Post(loginUrl, "application/json", bytes.NewBuffer(body))
+	response, err := client.Post(loginUrl, "application/json", bytes.NewBuffer(body))
 
 	if err != nil {
 		return "", fmt.Errorf("http.Post error: %s", err)
@@ -40,7 +40,13 @@ func doLoginRequest(loginUrl, password string) (string, error) {
 	if response.StatusCode != 200 {
 		return "", fmt.Errorf("Invalid output\nStatus: %d\nBody: %s", response.StatusCode, responseBody)
 	}
-
+	if !json.Valid(responseBody) {
+		return "", RequestError{
+			HTTPCode: response.StatusCode,
+			Body:     string(body),
+			Err:      fmt.Sprintf("No valid JSON returned"),
+		}
+	}
 	var loginResponse LoginResponse
 	err = json.Unmarshal(responseBody, &loginResponse)
 	if err != nil {
