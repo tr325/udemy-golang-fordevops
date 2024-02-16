@@ -1,6 +1,9 @@
 package api
 
-import "net/http"
+import (
+	"io"
+	"net/http"
+)
 
 type Options struct {
 	Password string
@@ -9,6 +12,7 @@ type Options struct {
 
 type ClientInterface interface {
 	Get(url string) (resp *http.Response, err error)
+	Post(url string, contentType string, body io.Reader) (resp *http.Response, err error)
 }
 type ApiInterface interface {
 	DoGetRequest(requestUrl string) (response, error)
@@ -24,9 +28,10 @@ func New(options Options) ApiInterface {
 		Options: options,
 		Client: &http.Client{
 			Transport: &jwtTransport{
-				transport: http.DefaultTransport,
-				password:  options.Password,
-				loginURL:  options.LoginURL,
+				transport:  http.DefaultTransport,
+				password:   options.Password,
+				loginURL:   options.LoginURL,
+				httpClient: &http.Client{},
 			},
 		},
 	}

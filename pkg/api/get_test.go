@@ -9,11 +9,15 @@ import (
 )
 
 type mockClient struct {
-	Response *http.Response
+	getResponse  *http.Response
+	postResponse *http.Response
 }
 
 func (m mockClient) Get(url string) (resp *http.Response, err error) {
-	return m.Response, nil
+	return m.getResponse, nil
+}
+func (m mockClient) Post(url string, contentType string, body io.Reader) (resp *http.Response, err error) {
+	return m.postResponse, nil
 }
 
 func TestDoGetRequest(t *testing.T) {
@@ -30,7 +34,7 @@ func TestDoGetRequest(t *testing.T) {
 	}
 
 	apiInstance := NewWithClient(mockClient{
-		Response: &http.Response{
+		getResponse: &http.Response{
 			StatusCode: 200,
 			Body:       io.NopCloser(bytes.NewReader(pageBytes)),
 		},
