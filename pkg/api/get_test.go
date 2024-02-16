@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -25,12 +24,10 @@ func TestDoGetRequest(t *testing.T) {
 			Words: []string{"a", "b"},
 		},
 	}
-	fmt.Println(wordsPage)
 	pageBytes, err := json.Marshal(wordsPage)
 	if err != nil {
 		t.Errorf("marshal error: %s", err)
 	}
-	fmt.Println(pageBytes)
 
 	apiInstance := NewWithClient(mockClient{
 		Response: &http.Response{
