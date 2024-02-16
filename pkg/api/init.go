@@ -7,24 +7,34 @@ type Options struct {
 	LoginURL string
 }
 
-type apiInterface interface {
+type ClientInterface interface {
+	Get(url string) (resp *http.Response, err error)
+}
+type ApiInterface interface {
 	DoGetRequest(requestUrl string) (response, error)
 }
 
 type api struct {
 	Options Options
-	Client  http.Client
+	Client  ClientInterface
 }
 
-func New(options Options) apiInterface {
+func New(options Options) ApiInterface {
 	return api{
 		Options: options,
-		Client: http.Client{
+		Client: &http.Client{
 			Transport: &jwtTransport{
 				transport: http.DefaultTransport,
 				password:  options.Password,
 				loginURL:  options.LoginURL,
 			},
 		},
+	}
+}
+
+func NewWithClient(clientInterface ClientInterface, options Options) ApiInterface {
+	return api{
+		Options: options,
+		Client:  clientInterface,
 	}
 }

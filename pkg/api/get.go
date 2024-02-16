@@ -11,6 +11,11 @@ type response interface {
 	GetResponse() string
 }
 
+type wordsPage struct {
+	page
+	words
+}
+
 // Using capitals for the type and fields ensures they are exported, and are available to other packages.
 // lower case is not exported.
 type page struct {
